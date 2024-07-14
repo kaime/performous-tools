@@ -66,8 +66,13 @@ void parseNote(xmlpp::Node* node) {
 	}
 	unsigned note = boost::lexical_cast<unsigned>(elem.get_attribute("MidiNote")->get_value().c_str());
 	unsigned duration = boost::lexical_cast<unsigned>(elem.get_attribute("Duration")->get_value().c_str());
-	if (elem.get_attribute("FreeStyle")) type = 'F';
-	if (elem.get_attribute("Bonus")) type = '*';
+        bool rap = elem.get_attribute("Rap");
+        bool golden = elem.get_attribute("Bonus");
+        bool freestyle = elem.get_attribute("FreeStyle");
+        if (!rap && golden) type = '*';
+        else if (rap && !golden) type = 'R';
+        else if (rap && golden) type = 'G';
+        else if (freestyle) type = 'F';
 	if (note) {
 		if (sleepts > 0) notes << "- " << sleepts << '\n';
 		sleepts = 0;
