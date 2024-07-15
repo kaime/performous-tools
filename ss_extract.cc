@@ -282,8 +282,11 @@ struct Process {
 					for (int i = 0; i < NUM_SINGERS; ++i) {
 						trackElem[i] = dynamic_cast<xmlpp::Element*>(*it++);
 						xmlpp::Attribute *artistAttr = trackElem[i]->get_attribute("Artist");
-						if (!artistAttr)
-							throw std::runtime_error("Track without Artist");
+						if (!artistAttr) {
+							artistAttr = trackElem[i]->get_attribute("Name");
+							if (!artistAttr)
+								throw std::runtime_error("Track without Artist");
+						}
 						singerName[i] = artistAttr->get_value();
 						singerActive[i] = false;
 					}
