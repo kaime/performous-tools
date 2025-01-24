@@ -45,6 +45,7 @@ std::stringstream singerNotes[NUM_SINGERS];
 bool singerActive[NUM_SINGERS];
 int ts = 0;
 int sleepts = -1;
+int pitch_offset = 0;
 bool g_video = true;
 bool g_audio = true;
 bool g_mkvcompress = true;
@@ -76,7 +77,7 @@ void parseNote(xmlpp::Node* node) {
 	if (note) {
 		if (sleepts > 0) notes << "- " << sleepts << '\n';
 		sleepts = 0;
-		notes << type << ' ' << ts << ' ' << duration << ' ' << note << ' ' << lyric << '\n';
+		notes << type << ' ' << ts << ' ' << duration << ' ' << note - pitch_offset << ' ' << lyric << '\n';
 	}
 	ts += duration;
 
@@ -461,6 +462,7 @@ int main( int argc, char **argv) {
 	  ("audio", po::value<std::string>(&audio)->default_value("ogg"), "specify audio format (none, ogg, wav)")
 	  ("txt,t", "also convert XML to notes.txt (for UltraStar compatibility)")
 	  ("duet,d", "create single duet-mode txt file for duets")
+	  ("offset,o", "apply correct pitch offset")
 	  ;
 	// Process the first flagless option as dvd, the second as song
 	po::positional_options_description pos;
@@ -504,8 +506,10 @@ int main( int argc, char **argv) {
 		std::cerr << ">>> Using audio flag: \"" << audio << "\"" << std::endl;
 		g_createtxt = vm.count("txt") > 0 || vm.count("duet") > 0;
 		g_duet = vm.count("duet") > 0;
+		pitch_offset = (vm.count("offset") > 0 ? 60 : 0);
 		std::cerr << ">>> Convert XML to notes.txt: " << (g_createtxt?"yes":"no") << std::endl;
 		std::cerr << ">>> Create single duet-mode txt file for duets: " << (g_duet?"yes":"no") << std::endl;
+		std::cerr << ">>> Apply correct pitch offset: " << (pitch_offset?"yes":"no") << std::endl;
 	} catch (std::exception& e) {
 		std::cout << cmdline << std::endl;
 		std::cout << "ERROR: " << e.what() << std::endl;
