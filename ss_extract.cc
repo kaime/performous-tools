@@ -27,7 +27,8 @@ struct Song {
 	unsigned samplerate;
 	double tempo;
 	bool isDuet, pal;
-	Song(): samplerate(), tempo(), isDuet() {}
+        double medleyStart, medleyEnd;
+	Song(): samplerate(), tempo(), isDuet(), medleyStart(), medleyEnd() {}
 };
 
 #include "ss_binary.hh"
@@ -152,6 +153,12 @@ void initTxtFile(const fs::path &path, const Song &song, const std::string suffi
 	if (!song.cover.empty()) txtfile << "#COVER:" << filename(song.cover) << std::endl;
 	//txtfile << "#BACKGROUND:background.jpg" << std::endl;
 	txtfile << "#BPM:" << song.tempo << std::endl;
+	if (song.medleyEnd > 0) {
+		int start = std::round(4 * (song.tempo / 60) * song.medleyStart);
+		txtfile << "#MEDLEYSTARTBEAT:" << start << std::endl;
+		int end = std::round(4 * (song.tempo / 60) * song.medleyEnd);
+		txtfile << "#MEDLEYENDBEAT:" << end << std::endl;
+	}
 }
 
 void finalizeTxtFile() {
@@ -441,6 +448,16 @@ struct FindSongs {
 			if (dom.find(elem, "ss:VIDEO/@FRAME_RATE", fr))
 			  fps = boost::lexical_cast<double>(dynamic_cast<xmlpp::Attribute&>(*fr[0]).get_value().c_str());
 			if (fps == 25.0) s.pal = true;
+			const xmlpp::Node::NodeList medleys = elem.get_children("MEDLEYS");
+			if (medleys.size() > 0) {
+				for (auto const &mt : medleys.front()->get_children("TYPE")) {
+					xmlpp::Element& elem = dynamic_cast<xmlpp::Element&>(*mt);
+					if (elem.get_first_child_text()->get_content() == "Normal") {
+						s.medleyStart = std::stod(elem.get_attribute("Start")->get_value());
+						s.medleyEnd = std::stod(elem.get_attribute("End")->get_value());
+					}
+				}
+			}
 			// Store song info to songs container
 			songs[elem.get_attribute("ID")->get_value()] = s;
 		}
