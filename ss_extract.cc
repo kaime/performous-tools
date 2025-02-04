@@ -50,7 +50,9 @@ int pitch_offset = 0;
 bool g_video = true;
 bool g_audio = true;
 bool g_mkvcompress = true;
+bool g_mp4compress = true;
 bool g_oggcompress = true;
+bool g_mp3compress = true;
 bool g_createtxt = true;
 bool g_duet = true;
 
@@ -245,6 +247,26 @@ struct Process {
 					}
 				}
 			}
+			if (g_mp3compress) {
+				if( !song.music.empty() ) {
+					std::cerr << ">>> Compressing audio into music.mp3" << std::endl;
+					std::string cmd = "lame \"" + song.music.string() + "\"";
+					std::cerr << cmd << std::endl;
+					if (std::system(cmd.c_str()) == 0) { // FIXME: std::system return value is not portable
+						fs::remove(song.music);
+						song.music = path / ("music.mp3");
+					}
+				}
+				if( !song.vocals.empty() ) {
+					std::cerr << ">>> Compressing audio into vocals.mp3" << std::endl;
+					std::string cmd = "lame \"" + song.vocals.string() + "\"";
+					std::cerr << cmd << std::endl;
+					if (std::system(cmd.c_str()) == 0) { // FIXME: std::system return value is not portable
+						fs::remove(song.vocals);
+						song.vocals = path / ("vocals.mp3");
+					}
+				}
+			}
 			if (g_video) {
 				std::cerr << ">>> Extracting video" << std::endl;
 				try {
@@ -269,6 +291,15 @@ struct Process {
 					if (std::system(cmd.c_str()) == 0) { // FIXME: std::system return value is not portable
 						fs::remove(path / "video.mpg");
 						song.video = path / "video.m4v";
+					}
+				}
+				if (g_mp4compress) {
+					std::cerr << ">>> Compressing video into video.mp4" << std::endl;
+					std::string cmd = "ffmpeg -i \"" + (path / "video.mpg").string() + "\" -vcodec libx264 -profile main -crf 25 -threads 0 -metadata album=\"" + song.edition + "\" -metadata author=\"" + song.artist + "\" -metadata comment=\"" + song.genre + "\" -metadata title=\"" + song.title + "\" \"" + (path / "video.mp4\"").string();
+					std::cerr << cmd << std::endl;
+					if (std::system(cmd.c_str()) == 0) { // FIXME: std::system return value is not portable
+						fs::remove(path / "video.mpg");
+						song.video = path / "video.mp4";
 					}
 				}
 			}
@@ -475,8 +506,8 @@ int main( int argc, char **argv) {
 	  ("dvd", po::value<std::string>(&dvdPath), "path to Singstar DVD root")
 	  ("list,l", "list tracks only")
 	  ("song", po::value<std::string>(&song), "only extract the given track (ID or partial name)")
-	  ("video", po::value<std::string>(&video)->default_value("mkv"), "specify video format (none, mkv, mpeg2)")
-	  ("audio", po::value<std::string>(&audio)->default_value("ogg"), "specify audio format (none, ogg, wav)")
+	  ("video", po::value<std::string>(&video)->default_value("mkv"), "specify video format (none, mkv, mp4, mpeg2)")
+	  ("audio", po::value<std::string>(&audio)->default_value("ogg"), "specify audio format (none, ogg, mp3, wav)")
 	  ("txt,t", "also convert XML to notes.txt (for UltraStar compatibility)")
 	  ("duet,d", "create single duet-mode txt file for duets")
 	  ("offset,o", "apply correct pitch offset")
@@ -497,28 +528,42 @@ int main( int argc, char **argv) {
 		if (video == "none") {
 			g_video = false;
 			g_mkvcompress = false;
+			g_mp4compress = false;
 		} else if (video == "mkv") {
 			g_video = true;
 			g_mkvcompress = true;
+			g_mp4compress = false;
+		} else if (video == "mp4") {
+			g_video = true;
+			g_mkvcompress = false;
+			g_mp4compress = true;
 		} else if (video == "mpeg2") {
 			g_video = true;
 			g_mkvcompress = false;
+			g_mp4compress = false;
 		} else {
-			throw std::runtime_error("Invalid video flag. Value must be {none, mkv, mpeg2}");
+			throw std::runtime_error("Invalid video flag. Value must be {none, mkv, mp4, mpeg2}");
 		}
 		std::cerr << ">>> Using video flag: \"" << video << "\"" << std::endl;
 		// Process audio flag
 		if (audio == "none") {
 			g_audio = false;
 			g_oggcompress = false;
+			g_mp3compress = false;
 		} else if (audio == "ogg") {
 			g_audio = true;
 			g_oggcompress = true;
+			g_mp3compress = false;
+		} else if (audio == "mp3") {
+			g_audio = true;
+			g_oggcompress = false;
+			g_mp3compress = true;
 		} else if (audio == "wav") {
 			g_audio = true;
 			g_oggcompress = false;
+			g_mp3compress = false;
 		} else {
-			throw std::runtime_error("Invalid audio flag. Value must be {none, ogg, wav}");
+			throw std::runtime_error("Invalid audio flag. Value must be {none, ogg, mp3, wav}");
 		}
 		std::cerr << ">>> Using audio flag: \"" << audio << "\"" << std::endl;
 		g_createtxt = vm.count("txt") > 0 || vm.count("duet") > 0;
