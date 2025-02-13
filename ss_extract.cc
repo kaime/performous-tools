@@ -179,8 +179,7 @@ struct Process {
 			std::string const& id = songpair.first;
 			Song& song = songpair.second;
 			std::cerr << "\n[" << id << "] " << song.artist << " - " << song.title << std::endl;
-			fs::path path = safename(song.edition);
-			path /= safename(song.artist + " - " + song.title);
+			fs::path path = safename(song.artist + " - " + song.title);
 			SSDom dom;
 			{
 				std::vector<char> tmp;
