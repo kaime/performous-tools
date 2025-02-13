@@ -250,7 +250,7 @@ struct Process {
 			if (g_mp3compress) {
 				if( !song.music.empty() ) {
 					std::cerr << ">>> Compressing audio into music.mp3" << std::endl;
-					std::string cmd = "lame \"" + song.music.string() + "\"";
+					std::string cmd = "lame -q0 -b256 \"" + song.music.string() + "\"";
 					std::cerr << cmd << std::endl;
 					if (std::system(cmd.c_str()) == 0) { // FIXME: std::system return value is not portable
 						fs::remove(song.music);
@@ -259,7 +259,7 @@ struct Process {
 				}
 				if( !song.vocals.empty() ) {
 					std::cerr << ">>> Compressing audio into vocals.mp3" << std::endl;
-					std::string cmd = "lame \"" + song.vocals.string() + "\"";
+					std::string cmd = "lame -q0 -b256 \"" + song.vocals.string() + "\"";
 					std::cerr << cmd << std::endl;
 					if (std::system(cmd.c_str()) == 0) { // FIXME: std::system return value is not portable
 						fs::remove(song.vocals);
@@ -286,7 +286,7 @@ struct Process {
 				}
 				if (g_mkvcompress) {
 					std::cerr << ">>> Compressing video into video.m4v" << std::endl;
-					std::string cmd = "ffmpeg -i \"" + (path / "video.mpg").string() + "\" -vcodec libx264 -profile main -crf 25 -threads 0 -metadata album=\"" + song.edition + "\" -metadata author=\"" + song.artist + "\" -metadata comment=\"" + song.genre + "\" -metadata title=\"" + song.title + "\" \"" + (path / "video.m4v\"").string();
+					std::string cmd = "ffmpeg -i \"" + (path / "video.mpg").string() + "\" -vcodec libx264 -profile main -crf 20 -threads 0 -metadata album=\"" + song.edition + "\" -metadata author=\"" + song.artist + "\" -metadata comment=\"" + song.genre + "\" -metadata title=\"" + song.title + "\" \"" + (path / "video.m4v\"").string();
 					std::cerr << cmd << std::endl;
 					if (std::system(cmd.c_str()) == 0) { // FIXME: std::system return value is not portable
 						fs::remove(path / "video.mpg");
@@ -295,7 +295,7 @@ struct Process {
 				}
 				if (g_mp4compress) {
 					std::cerr << ">>> Compressing video into video.mp4" << std::endl;
-					std::string cmd = "ffmpeg -i \"" + (path / "video.mpg").string() + "\" -vcodec libx264 -profile main -crf 25 -threads 0 -metadata album=\"" + song.edition + "\" -metadata author=\"" + song.artist + "\" -metadata comment=\"" + song.genre + "\" -metadata title=\"" + song.title + "\" \"" + (path / "video.mp4\"").string();
+					std::string cmd = "ffmpeg -i \"" + (path / "video.mpg").string() + "\" -vcodec libx264 -profile main -crf 20 -threads 0 -metadata album=\"" + song.edition + "\" -metadata author=\"" + song.artist + "\" -metadata comment=\"" + song.genre + "\" -metadata title=\"" + song.title + "\" \"" + (path / "video.mp4\"").string();
 					std::cerr << cmd << std::endl;
 					if (std::system(cmd.c_str()) == 0) { // FIXME: std::system return value is not portable
 						fs::remove(path / "video.mpg");
