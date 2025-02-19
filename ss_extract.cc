@@ -23,7 +23,7 @@ namespace fs = boost::filesystem;
 
 struct Song {
 	std::string dataPakName, title, artist, genre, edition, year;
-	fs::path path, music, vocals, video, background, cover;
+	fs::path path, music, instrumental, vocals, video, background, cover;
 	unsigned samplerate;
 	double tempo;
 	bool isDuet, pal;
@@ -150,6 +150,7 @@ void initTxtFile(const fs::path &path, const Song &song, const std::string suffi
 	if (!song.edition.empty()) txtfile << "#EDITION:" << song.edition << std::endl;
 	//txtfile << "#LANGUAGE:English" << std::endl; // Detect instead of hardcoding?
 	if (!song.music.empty()) txtfile << "#AUDIO:" << filename(song.music) << std::endl;
+	if (!song.instrumental.empty()) txtfile << "#INSTRUMENTAL:" << filename(song.instrumental) << std::endl;
 	if (!song.vocals.empty()) txtfile << "#VOCALS:" << filename(song.vocals) << std::endl;
 	if (!song.video.empty()) txtfile << "#VIDEO:" << filename(song.video) << std::endl;
 	if (!song.cover.empty()) txtfile << "#COVER:" << filename(song.cover) << std::endl;
@@ -217,7 +218,22 @@ struct Process {
 				} catch (...) {
 					music_us(song, dataPak[id + "/mus+vid.iav"], dataPak[id + "/mus+vid.ind"], path);
 				}
+
+				// Is song music is empty but there is a instrumental track and a vocal track,
+				// merge both into a single track using sox
+				if (song.music.empty()) {
+					if (!song.instrumental.empty() && !song.vocals.empty()) {
+						std::cerr << ">>> Merging instrumental and vocal tracks" << std::endl;
+						std::string cmd = "sox -m \"" + song.instrumental.string() + "\" \"" + song.vocals.string() + "\" \"" + (path / "music.wav").string() + "\"";
+						std::cerr << cmd << std::endl;
+
+						if (std::system(cmd.c_str()) == 0) { // FIXME: std::system return value is not portable
+							song.music = path / "music.wav";
+						}
+					}
+				}
 			}
+
 			std::cerr << ">>> Extracting cover image" << std::endl;
 			try {
 				SingstarCover c = SingstarCover(dvdPath + "/pack_ee.pak", boost::lexical_cast<unsigned int>(id));
@@ -234,6 +250,15 @@ struct Process {
 					if (std::system(cmd.c_str()) == 0) { // FIXME: std::system return value is not portable
 						fs::remove(song.music);
 						song.music = path / ("music.ogg");
+					}
+				}
+				if( !song.vocals.empty() ) {
+					std::cerr << ">>> Compressing audio into instrumental.ogg" << std::endl;
+					std::string cmd = "oggenc \"" + song.instrumental.string() + "\"";
+					std::cerr << cmd << std::endl;
+					if (std::system(cmd.c_str()) == 0) { // FIXME: std::system return value is not portable
+						fs::remove(song.instrumental);
+						song.instrumental = path / ("instrumental.ogg");
 					}
 				}
 				if( !song.vocals.empty() ) {
@@ -254,6 +279,15 @@ struct Process {
 					if (std::system(cmd.c_str()) == 0) { // FIXME: std::system return value is not portable
 						fs::remove(song.music);
 						song.music = path / ("music.mp3");
+					}
+				}
+				if( !song.instrumental.empty() ) {
+					std::cerr << ">>> Compressing audio into instrumental.mp3" << std::endl;
+					std::string cmd = "lame -q0 -b256 \"" + song.instrumental.string() + "\"";
+					std::cerr << cmd << std::endl;
+					if (std::system(cmd.c_str()) == 0) { // FIXME: std::system return value is not portable
+						fs::remove(song.instrumental);
+						song.instrumental = path / ("instrumental.mp3");
 					}
 				}
 				if( !song.vocals.empty() ) {

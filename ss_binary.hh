@@ -140,8 +140,13 @@ void music_us(Song& song, PakFile const& iavFile, PakFile const& indFile, fs::pa
 		frame++;
 	}
 	std::string ext;
-	writeMusic(song.music = outPath / ("music.wav"), pcm[0], sr);
-	if (karaoke) writeMusic(song.vocals = outPath / ("vocals.wav"), pcm[1], sr);
+
+	if (karaoke) {
+		writeMusic(song.instrumental = outPath / ("instrumental.wav"), pcm[0], sr);
+		writeMusic(song.vocals = outPath / ("vocals.wav"), pcm[1], sr);
+	} else {
+		writeMusic(song.music = outPath / ("music.wav"), pcm[0], sr);
+	}
 }
 
 void music(Song& song, PakFile const& dataFile, PakFile const& headerFile, fs::path const& outPath) {
@@ -170,7 +175,12 @@ void music(Song& song, PakFile const& dataFile, PakFile const& headerFile, fs::p
 		}
 	}
 	std::string ext;
-	writeMusic(song.music = outPath / ("music.wav"), pcm[0], sr);
-	if (karaoke) writeMusic(song.vocals = outPath / ("vocals.wav"), pcm[1], sr);
+
+	if (karaoke) {
+		writeMusic(song.instrumental = outPath / ("instrumental.wav"), pcm[0], sr);
+		writeMusic(song.vocals = outPath / ("vocals.wav"), pcm[1], sr);
+	} else {
+		writeMusic(song.music = outPath / ("music.wav"), pcm[0], sr);
+	}
 }
 
