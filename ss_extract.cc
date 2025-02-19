@@ -142,13 +142,14 @@ void initTxtFile(const fs::path &path, const Song &song, const std::string suffi
 	fs::path file_path;
 	file_path = path / (std::string("notes") + suffix + ".txt");
 	txtfile.open(file_path.string().c_str());
+	txtfile << "#VERSION:1.1.0"  << std::endl;
 	txtfile << "#TITLE:" << song.title << suffix << std::endl;
 	txtfile << "#ARTIST:" << song.artist << std::endl;
 	if (!song.genre.empty()) txtfile << "#GENRE:" << song.genre << std::endl;
 	if (!song.year.empty()) txtfile << "#YEAR:" << song.year << std::endl;
 	if (!song.edition.empty()) txtfile << "#EDITION:" << song.edition << std::endl;
 	//txtfile << "#LANGUAGE:English" << std::endl; // Detect instead of hardcoding?
-	if (!song.music.empty()) txtfile << "#MP3:" << filename(song.music) << std::endl;
+	if (!song.music.empty()) txtfile << "#AUDIO:" << filename(song.music) << std::endl;
 	if (!song.vocals.empty()) txtfile << "#VOCALS:" << filename(song.vocals) << std::endl;
 	if (!song.video.empty()) txtfile << "#VIDEO:" << filename(song.video) << std::endl;
 	if (!song.cover.empty()) txtfile << "#COVER:" << filename(song.cover) << std::endl;
